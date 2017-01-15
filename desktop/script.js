@@ -64,6 +64,40 @@ function draw ()
 
     ctx.fillText (upgrades.points + " POINTS", width - 10, 0.10638 * height); //write the points counter just below the top center of the screen
 
+    //draw menu icons
+    if (iconLoad == 5)
+    {
+        ctx.drawImage (
+            bearingButton,
+            0, 0, bearingButton.width, bearingButton.height,
+            width / 6 - height * 0.05, height * 0.885, height * 0.1, height * 0.1
+        ); //bearing
+
+        ctx.drawImage (
+            bladeButton,
+            0, 0, bearingButton.width, bearingButton.height,
+            2 * width / 6 - height * 0.05, height * 0.885, height * 0.1, height * 0.1
+        ); //blade
+
+        ctx.drawImage (
+            lubricantButton,
+            0, 0, bearingButton.width, bearingButton.height,
+            3 * width / 6 - height * 0.05, height * 0.885, height * 0.1, height * 0.1
+        ); //lubricant
+
+        ctx.drawImage (
+            colourButton,
+            0, 0, bearingButton.width, bearingButton.height,
+            4 * width / 6 - height * 0.05, height * 0.885, height * 0.1, height * 0.1
+        ); //colour
+
+        ctx.drawImage (
+            trailButton,
+            0, 0, bearingButton.width, bearingButton.height,
+            5 * width / 6 - height * 0.05, height * 0.885, height * 0.1, height * 0.1
+        ); //trail
+    }
+
     if (menuSelect <= 0)
     {
         return; //do nothing else if menu isn't selected.
@@ -72,6 +106,42 @@ function draw ()
     {
         ctx.fillStyle = "#F00"; //temp menu box display
         ctx.fillRect (width / 6, height / 6, 2 * width / 3, 2 * height / 3);
+
+        if (closeLoaded)
+        {
+            //close icon
+            ctx.drawImage (
+                close, 0, 0, close.width, close.height,
+                5 * width / 6 - close.width, height / 6,
+                close.width, close.height
+            );
+        }
+    }
+
+    if (menuSelect == 1)
+    {
+        ctx.fillStyle = "#0F0"; //temp menu stuff
+        ctx.fillRect (width / 2, height / 2, 100, 100);
+    }
+    else if (menuSelect == 2)
+    {
+        ctx.fillStyle = "#00F"; //temp menu stuff
+        ctx.fillRect (width / 2, height / 2, 100, 100);
+    }
+    else if (menuSelect == 3)
+    {
+        ctx.fillStyle = "#FF0"; //temp menu stuff
+        ctx.fillRect (width / 2, height / 2, 100, 100);
+    }
+    else if (menuSelect == 4)
+    {
+        ctx.fillStyle = "#F0F"; //temp menu stuff
+        ctx.fillRect (width / 2, height / 2, 100, 100);
+    }
+    else if (menuSelect == 5)
+    {
+        ctx.fillStyle = "#0FF"; //temp menu stuff
+        ctx.fillRect (width / 2, height / 2, 100, 100);
     }
 }
 
@@ -139,7 +209,33 @@ function clickHandler (event)
     var x = event.offsetX; //get coordinates of click
     var y = event.offsetY;
 
-    //todo: add funcionality
+    //menu buttons
+    if (within (x, y, width / 6 - height * 0.05, height * 0.885, width / 6 + height * 0.05, height * 0.985))
+    {
+        menuSelect = 1;
+    }
+    else if (within (x, y, 2 * width / 6 - height * 0.05, height * 0.885, 2 * width / 6 + height * 0.05, height * 0.985))
+    {
+        menuSelect = 2;
+    }
+    else if (within (x, y, 3 * width / 6 - height * 0.05, height * 0.885, 3 * width / 6 + height * 0.05, height * 0.985))
+    {
+        menuSelect = 3;
+    }
+    else if (within (x, y, 4 * width / 6 - height * 0.05, height * 0.885, 4 * width / 6 + height * 0.05, height * 0.985))
+    {
+        menuSelect = 4;
+    }
+    else if (within (x, y, 5 * width / 6 - height * 0.05, height * 0.885, 5 * width / 6 + height * 0.05, height * 0.985))
+    {
+        menuSelect = 5;
+    }
+
+    //close button
+    if (menuSelect > 0 && within (x, y, 5 * width / 6 - close.width, height / 6, 5 * width / 6, height / 6 + close.height))
+    {
+        menuSelect = 0;
+    }
 }
 
 //handles mouse moving
@@ -226,14 +322,33 @@ blade.push (new Image ());
 blade [0].src = "../assets/bladeGrey.png";
 
 //set bar image
-var bar = new Image();
+var bar = new Image ();
 bar.src = "../assets/progressBar.png";
 
+//set close icon image
+var close = new Image ();
+close.src = "../assets/exit.png";
+
+//set menu images
+var bearingButton = new Image ();
+bearingButton.src = "../assets/bearingButton.png";
+var bladeButton = new Image ();
+bladeButton.src = "../assets/bladeButton.png";
+var colourButton = new Image ();
+colourButton.src = "../assets/colourButton.png";
+var lubricantButton = new Image ();
+lubricantButton.src = "../assets/lubricantButton.png";
+var trailButton = new Image ();
+trailButton.src = "../assets/trailButton.png";
+
+//flags
 var backgroundLoaded = false; //flag if the background image has loaded
 var bearingLoaded = []; //flags for bearings
 var bladeLoaded = []; //flags for blades
 var barLoaded = false; //flag if the bar is loaded
+var iconLoad = 0; //counting the number of icons loaded
 var mouseDown = false; //flag if the mouse is down
+var closeLoaded = false;
 var menuSelect = 0; //flag for menu selection
 
 for (var i = 0; i < bearing.length; i++) //set bearing and blade flags
@@ -259,6 +374,16 @@ bar.addEventListener ("load", function () {barLoaded = true;});
 //blade and bearing flag toggles
 bearing [0].addEventListener ("load", function () {bearingLoaded [0] = true;});
 blade [0].addEventListener ("load", function () {bladeLoaded [0] = true;});
+
+//icon flag toggles
+bearingButton.addEventListener ("load", function () {iconLoad++;});
+bladeButton.addEventListener ("load", function () {iconLoad++;});
+colourButton.addEventListener ("load", function () {iconLoad++;});
+lubricantButton.addEventListener ("load", function () {iconLoad++;});
+trailButton.addEventListener ("load", function () {iconLoad++;});
+
+//close icon toggle
+close.addEventListener ("load", function () {closeLoaded = true;});
 
 canvas.addEventListener ("mousedown", markStart); //toggles flag when mouse is down, remembers where the mouse started
 canvas.addEventListener ("mouseup", markEnd); //toggles flag whem mouse is up
