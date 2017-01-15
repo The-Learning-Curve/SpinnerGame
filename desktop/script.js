@@ -5,9 +5,11 @@ function Game ()
     this.lastSpin = 0; //what the last spin state was
     this.rotorSpeed = 0; //what the current rotational speed of the rotor is
     this.rotorFriction = 0.001; //how much the rotor slows down by per tick
+    this.maxSpeed = 2 * Math.PI / 70 * 0.5; //max rotor speed
     this.deltaSpin = 0; //counts change in spin
     this.points = 0; //number of points
     this.pointsPerSpin = 1; //points per spin
+    this.startAngle = 0; //starting angle of click
 }
 
 //draws the canvas based on the current state
@@ -34,13 +36,32 @@ function draw ()
     /*line (width / 2, 0, width / 2, height);
     line (0, height / 2, width, height / 2);*/ //crosshairs for alignment
 
-    ctx.textAlign = "center"; //text is centered, aligned to top 60 px courier new
+    ctx.textAlign = "right"; //text is right, aligned to top 60 px courier new
     ctx.textBaseline = "top";
     ctx.font = "60px Courier New";
 
-    ctx.fillStyle = "#FFF"; //text is black
+    ctx.fillStyle = "#FFF"; //text is white
 
-    ctx.fillText (game.points, width / 2, 10); //write the points counter just below the top center of the screen
+    ctx.fillText (game.points + " POINTS", width - 10, 0.1063829787 * height); //write the points counter just below the top center of the screen
+
+    if (barLoaded)
+    {
+        ctx.drawImage (
+            bar,
+            0, 0,
+            0.907912234 * width * (Math.abs(game.deltaSpin) / ((2 * Math.PI) / game.pointsPerSpin)), bar.height,
+            0.064162234*width, 0.0526004728*height,
+            bar.width, bar.height
+        );
+    }
+
+    if (mouseDown)
+    {
+        ctx.fillRect (10, 10, 50, 50);
+    }
+
+    ctx.fillText (game.rotorSpin, width - 10, 170);
+    ctx.fillText (game.rotorSpeed, width - 10, 240);
 }
 
 //ticks game logic
@@ -48,7 +69,7 @@ function tick ()
 {
     game.rotorSpin = (game.rotorSpin + (Math.PI * 2)) % (Math.PI * 2); //normalize rotorSpin to between zero and 2pi
 
-    game.deltaSpin += getDeltaSpin (); //add speed (whatever the current speed is) to deltaSpin
+    game.deltaSpin += Math.abs (game.rotorSpeed); //add speed (whatever the current speed is) to deltaSpin
 
     game.lastSpin = game.rotorSpin; //note down current velocity
     game.rotorSpin += game.rotorSpeed; //tick velocity
@@ -71,6 +92,16 @@ function tick ()
         throw "Gameerror: Speed out of bounds"; //this throws if the speed is neither zero, positive, nor negative
     }
 
+    //rotor is limited to maximum speed
+    if (game.rotorSpeed > game.maxSpeed)
+    {
+        game.rotorSpeed = game.maxSpeed;
+    }
+    else if (game.rotorSpeed < -game.maxSpeed)
+    {
+        game.rotorSpeed = -game.maxSpeed;
+    }
+
     if (Math.abs (game.deltaSpin) > (2 * Math.PI) / game.pointsPerSpin)
     {
         game.deltaSpin -= Math.sign (game.deltaSpin) * ((2 * Math.PI) / game.pointsPerSpin);
@@ -87,26 +118,6 @@ function clickHandler (event)
     var y = event.offsetY;
 
     //todo: add funcionality
-}
-
-//gets the change in rotational position
-function getDeltaSpin ()
-{
-    var deltaSpin = game.rotorSpin - game.lastSpin;
-
-    if (Math.abs (deltaSpin) > 1.9 * Math.PI)
-    {
-        if (deltaSpin < 0)
-        {
-            deltaSpin += (2 * Math.PI);
-        }
-        else
-        {
-            deltaSpin -= (2 * Math.PI);
-        }
-    }
-
-    return deltaSpin;
 }
 
 //handles mouse moving
@@ -130,7 +141,7 @@ function moveHandler (event)
     angle += Math.PI / 2; //normalize angle so that up is zero
     angle = (angle + (Math.PI * 2)) % (Math.PI * 2); //normalize angle to between zero and 2pi
 
-    game.rotorSpin = rotorStartAngle + angle - startAngle; //new spin is the change in mouse angle minus the initial spin angle
+    game.rotorSpeed = angle - game.clickAngle - game.lastSpin; //new spin is the change in mouse angle minus the initial spin angle
 }
 
 //marks the start of the mouse click
@@ -141,24 +152,20 @@ function markStart (event)
     var x = event.offsetX; //get coordinates of click
     var y = event.offsetY;
 
+    //calculate angle of new click
+
     x -= width / 2; //adjust coordinates
     y -= height / 2;
 
-    startAngle = Math.atan2 (y, x); //mark starting angle of mouse
-    startAngle += Math.PI / 2; //normalize angle so that up is zero
-    startAngle = (startAngle + (Math.PI * 2)) % (Math.PI * 2); //normalize angle to between zero and 2pi
-
-    rotorStartAngle = game.rotorSpin; //set starting angle of rotor
-
-    game.rotorSpeed = 0; //zero off the rotor speed
+    game.clickAngle = Math.atan2 (y, x); //get angle of click (from center)
+    game.clickAngle += Math.PI / 2; //normalize angle so that up is zero
+    game.clickAngle = (angle + (Math.PI * 2)) % (Math.PI * 2); //normalize angle to between zero and 2pi
 }
 
 //marks the end of the mouse click
 function markEnd (event)
 {
     mouseDown = false; //toggle flag
-
-    game.rotorSpeed = getDeltaSpin ();
 }
 
 //resizes the canvas when the window is resized.
@@ -183,9 +190,14 @@ background.src = "../assets/desktopBackground.png";
 var rotor = new Image ();
 rotor.src = "../assets/rotor.png";
 
+//set bar image
+var bar = new Image();
+bar.src = "../assets/progressBar.png";
+
 var backgroundLoaded = false; //flag if the background image has loaded
 var rotorLoaded = false; //flag if the rotor image is loaded
 var mouseDown = false; //flag if the mouse is down
+var barLoaded = false;
 
 var tickTimer = setInterval (tick, 15); //ticks once every 15 ms (about 70 fps max), using ticktimer as a handle
 
@@ -198,6 +210,7 @@ window.addEventListener ("resize", resizeHandler); //resize canvas on window res
 
 background.addEventListener ("load", function () {backgroundLoaded = true;}); //toggles flags when loaded
 rotor.addEventListener ("load", function () {rotorLoaded = true;});
+bar.addEventListener ("load", function () {barLoaded = true;});
 
 canvas.addEventListener ("mousedown", markStart); //toggles flag when mouse is down, remembers where the mouse started
 canvas.addEventListener ("mouseup", markEnd); //toggles flag whem mouse is up

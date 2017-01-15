@@ -132,3 +132,18 @@ function within (x, y, x1, y1, x2, y2)
     }
     return false;
 }
+
+function roundedRectangle (x1, y1, x2, y2, round)
+{
+    ctx.beginPath ();
+    ctx.moveTo (x1 + round, y1); //start at upper left, going clockwize just after end of rounded corner
+    ctx.lineTo (x1 + x2 - round, y1); //upper right, just before rounded corner
+    ctx.quadraticCurveTo (x1 + x2, y1, x1 + x2, y1 + round); //upper right rounded corner
+    ctx.lineTo (x1 + x2, y1 + y2 - round); //lower right just before corner
+    ctx.quadraticCurveTo (x1 + x2, y1 + y2, x1 + x2 - round, y1 + y2); //lower right rounded corner
+    ctx.lineTo (x1 + round, y1 + y2); //lower left just before corner
+    ctx.quadraticCurveTo (x1, y1 + y2, x1, y1 + y2 - round); //lower left corner
+    ctx.lineTo (x1, y1 + round); //upper left just before corner
+    ctx.quadraticCurveTo (x1, y1, x1 + round, y1); //upper left corner
+    ctx.fill (); //fill with colour
+}
