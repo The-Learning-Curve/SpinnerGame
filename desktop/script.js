@@ -18,7 +18,8 @@ function Upgrades ()
     this.bladeLevel = 1; //blade upgrade level
     this.rotorLevel = 1; //rotor upgrade level
     this.lubricant = -1; //lubricant upgrade level
-    this.bladeColour = "#EEE";
+    this.bladeColour = 0; //rotor blade colour
+    this.trail = false; //is there a trail to be displayed
 }
 
 //draws the canvas based on the current state
@@ -33,12 +34,13 @@ function draw ()
     }
 
     //if the rotos is loaded, draw the rotor
-    if (rotorLoaded)
+    if (bearingLoaded [upgrades.bearingLevel - 1] && bladeLoaded [upgrades.bladeColour])
     {
         ctx.save (); //save coordinate system
         ctx.translate (width / 2, height / 2); //set center of screen as origin
         ctx.rotate (game.rotorSpin); //spin the screen around the center
-        ctx.drawImage (rotor, -rotor.width / 2, -rotor.height / 2); //draw the rotor at the center
+        ctx.drawImage (bearing [upgrades.bearingLevel - 1], -bearing [upgrades.bearingLevel - 1].width / 2, -bearing [upgrades.bearingLevel - 1].height / 2); //draw the bearing at the center
+        ctx.drawImage (blade [upgrades.bladeColour], -blade [upgrades.bladeColour].width / 2, -blade [upgrades.bladeColour].height / 2); //draw the blade at the center
         ctx.restore (); //reset coordinate system
     }
 
@@ -74,17 +76,17 @@ function tick ()
     game.rotorSpin += game.rotorSpeed; //tick velocity
 
     //rotor stops if speed is low enough, otherwise speed is reduced.
-    if (Math.abs (game.rotorSpeed) < game.rotorFriction)
+    if (Math.abs (game.rotorSpeed) < upgrades.rotorFriction)
     {
         game.rotorSpeed = 0;
     }
     else if (game.rotorSpeed < 0)
     {
-        game.rotorSpeed += game.rotorFriction;
+        game.rotorSpeed += upgrades.rotorFriction;
     }
     else if (game.rotorSpeed > 0)
     {
-        game.rotorSpeed -= game.rotorFriction;
+        game.rotorSpeed -= upgrades.rotorFriction;
     }
     else
     {
@@ -144,7 +146,7 @@ function moveHandler (event)
         var angle = Math.atan2 (y, x) - Math.atan2 (game.startY, game.startX); //normal case
     }
 
-    console.log (angle + " " + x + " " + y);
+    console.log (angle);
 
     game.rotorSpeed = angle; //new spin speed is the change in mouse angle
 
@@ -194,18 +196,35 @@ init (); //initialize canvas
 var background = new Image ();
 background.src = "../assets/desktopBackground.png";
 
-//set rotor image
-var rotor = new Image ();
-rotor.src = "../assets/rotor.png";
+//set bearing images
+var bearing = [];
+bearing.push (new Image ());
+bearing [0].src = "../assets/bearing1.png";
+
+//set blade images
+var blade = [];
+blade.push (new Image ());
+blade [0].src = "../assets/bladeGrey.png";
 
 //set bar image
 var bar = new Image();
 bar.src = "../assets/progressBar.png";
 
 var backgroundLoaded = false; //flag if the background image has loaded
-var rotorLoaded = false; //flag if the rotor image is loaded
+var bearingLoaded = []; //flags for bearings
+var bladeLoaded = []; //flags for blades
 var barLoaded = false; //flag if the bar is loaded
 var mouseDown = false; //flag if the mouse is down
+
+for (var i = 0; i < bearing.length; i++) //set bearing and blade flags
+{
+    bearingLoaded.push (false);
+}
+
+for (var i = 0; i < blade.length; i++)
+{
+    bladeLoaded.push (false);
+}
 
 var tickTimer = setInterval (tick, 15); //ticks once every 15 ms (about 70 fps max), using ticktimer as a handle
 
@@ -215,8 +234,11 @@ var upgrades = new Upgrades ();
 window.addEventListener ("resize", resizeHandler); //resize canvas on window resize
 
 background.addEventListener ("load", function () {backgroundLoaded = true;}); //toggles flags when loaded
-rotor.addEventListener ("load", function () {rotorLoaded = true;});
 bar.addEventListener ("load", function () {barLoaded = true;});
+
+//blade and bearing flag toggles
+bearing [0].addEventListener ("load", function () {bearingLoaded [0] = true;});
+blade [0].addEventListener ("load", function () {bladeLoaded [0] = true;});
 
 canvas.addEventListener ("mousedown", markStart); //toggles flag when mouse is down, remembers where the mouse started
 canvas.addEventListener ("mouseup", markEnd); //toggles flag whem mouse is up
