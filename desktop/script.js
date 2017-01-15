@@ -62,7 +62,17 @@ function draw ()
 
     ctx.fillStyle = "#FFF"; //text is white
 
-    ctx.fillText (upgrades.points + " POINTS", width - 10, 0.1063829787 * height); //write the points counter just below the top center of the screen
+    ctx.fillText (upgrades.points + " POINTS", width - 10, 0.10638 * height); //write the points counter just below the top center of the screen
+
+    if (menuSelect <= 0)
+    {
+        return; //do nothing else if menu isn't selected.
+    }
+    else
+    {
+        ctx.fillStyle = "#F00"; //temp menu box display
+        ctx.fillRect (width / 6, height / 6, 2 * width / 3, 2 * height / 3);
+    }
 }
 
 //ticks game logic
@@ -109,6 +119,17 @@ function tick ()
         upgrades.points++;
     }
 
+    //tick lubricant
+    if (upgrades.lubricant > 0)
+    {
+        upgrades.lubricant--;
+    }
+    else if (upgrades.lubricant == 0)
+    {
+        upgrades.friction = 0.00025;
+        upgrades.lubricant = -1;
+    }
+
     draw (); //draw the screen for the frame
 }
 
@@ -146,11 +167,9 @@ function moveHandler (event)
         var angle = Math.atan2 (y, x) - Math.atan2 (game.startY, game.startX); //normal case
     }
 
-    console.log (angle);
-
     game.rotorSpeed = angle; //new spin speed is the change in mouse angle
 
-    game.startY = y;
+    game.startY = y; //save new initial location
     game.startX = x;
 }
 
@@ -215,6 +234,7 @@ var bearingLoaded = []; //flags for bearings
 var bladeLoaded = []; //flags for blades
 var barLoaded = false; //flag if the bar is loaded
 var mouseDown = false; //flag if the mouse is down
+var menuSelect = 0; //flag for menu selection
 
 for (var i = 0; i < bearing.length; i++) //set bearing and blade flags
 {
@@ -229,7 +249,7 @@ for (var i = 0; i < blade.length; i++)
 var tickTimer = setInterval (tick, 15); //ticks once every 15 ms (about 70 fps max), using ticktimer as a handle
 
 var game = new Game (); //create the game object
-var upgrades = new Upgrades ();
+var upgrades = new Upgrades (); //create the upgrades object
 
 window.addEventListener ("resize", resizeHandler); //resize canvas on window resize
 
